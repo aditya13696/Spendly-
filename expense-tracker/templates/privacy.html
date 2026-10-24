@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy — Spendly{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-inner">
+        <h1 class="hero-title">Privacy <br><em>Policy</em></h1>
+        <p class="hero-subtitle">
+            Your privacy is important to us. This policy explains how we handle your data.
+        </p>
+    </div>
+</section>
+
+<section class="features">
+    <div class="features-inner" style="display: block; max-width: 800px; margin: 0 auto; text-align: left;">
+        <div class="feature-card" style="margin-bottom: 2rem; display: block;">
+            <h3 class="feature-title">1. Data We Collect</h3>
+            <p class="feature-body">We collect basic information such as your email address for account creation and the expense details (amount, category, date) that you manually enter into the application.</p>
+        </div>
+        <div class="feature-card" style="margin-bottom: 2rem; display: block;">
+            <h3 class="feature-title">2. How We Use Your Data</h3>
+            <p class="feature-body">Your data is used solely to provide the expense tracking service. We use your entries to generate spending summaries and financial insights for your own personal use.</p>
+        </div>
+        <div class="feature-card" style="margin-bottom: 2rem; display: block;">
+            <h3 class="feature-title">3. Data Storage & Security</h3>
+            <p class="feature-body">We implement standard security measures to protect your data. However, please be aware that no method of electronic storage is 100% secure.</p>
+        </div>
+        <div class="feature-card" style="display: block;">
+            <h3 class="feature-title">4. Third-Party Sharing</h3>
+            <p class="feature-body">Spendly does not sell, trade, or otherwise transfer your personally identifiable information to outside parties.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

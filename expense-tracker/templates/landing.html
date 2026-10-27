@@ -16,7 +16,7 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
-            <a href="#how-it-works" class="btn-primary">See how it works</a>
+            <button id="videoModalTrigger" class="btn-primary">See how it works</button>
         </div>
     </div>
     <div class="hero-visual">
@@ -64,6 +64,31 @@
     </div>
 </section>
 
+<!-- Video Modal -->
+<div id="videoModal" class="video-modal" role="dialog" aria-labelledby="videoModalTitle" aria-hidden="true">
+    <div class="video-modal-overlay"></div>
+    <div class="video-modal-container">
+        <div class="video-modal-content">
+            <button id="videoModalClose" class="video-modal-close" aria-label="Close modal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="video-modal-iframe-wrapper">
+                <iframe
+                    id="videoFrame"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                    title="Spendly - How It Works"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
 <section class="features">
     <div class="features-inner">
         <div class="feature-card">
@@ -92,4 +117,42 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('videoModal');
+    const trigger = document.getElementById('videoModalTrigger');
+    const closeBtn = document.getElementById('videoModalClose');
+    const overlay = document.querySelector('.video-modal-overlay');
+    const body = document.body;
+
+    // Open modal
+    function openModal() {
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        body.style.overflow = 'hidden';
+    }
+
+    // Close modal
+    function closeModal() {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        body.style.overflow = '';
+    }
+
+    // Event listeners
+    trigger.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', closeModal);
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+});
+</script>
 {% endblock %}

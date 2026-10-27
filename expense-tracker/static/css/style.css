@@ -69,7 +69,7 @@ a { color: inherit; text-decoration: none; }
 .nav-inner {
     max-width: var(--max-width);
     margin: 0 auto;
-    height: 60px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -128,10 +128,10 @@ a { color: inherit; text-decoration: none; }
 /* ------------------------------------------------------------------ */
 
 .hero {
-    padding: 12rem 2rem 12rem;
+    padding: 5rem 2rem 5rem;
     display: grid;
     grid-template-columns: 1.2fr 0.8fr;
-    gap: 8rem;
+    gap: 4rem;
     align-items: center;
     max-width: var(--max-width);
     margin: 0 auto;
@@ -160,20 +160,20 @@ a { color: inherit; text-decoration: none; }
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.05em;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.9rem;
     border-radius: 999px;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     border: 1px solid rgba(26, 71, 42, 0.1);
     animation: fadeInDown 0.8s ease-out;
 }
 
 .hero-title {
     font-family: var(--font-display);
-    font-size: clamp(3.5rem, 8vw, 5.5rem);
-    line-height: 0.95;
-    letter-spacing: -0.05em;
+    font-size: clamp(3rem, 6vw, 4.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
     color: var(--ink);
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
     animation: fadeInLeft 0.8s ease-out;
 }
 
@@ -185,17 +185,17 @@ a { color: inherit; text-decoration: none; }
 }
 
 .hero-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     color: var(--ink-muted);
     line-height: 1.6;
-    max-width: 580px;
-    margin-bottom: 3.5rem;
+    max-width: 540px;
+    margin-bottom: 2rem;
     animation: fadeInLeft 1s ease-out;
 }
 
 .hero-actions {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.25rem;
     align-items: center;
     animation: fadeInUp 1.2s ease-out;
 }
@@ -213,9 +213,9 @@ a { color: inherit; text-decoration: none; }
     backdrop-filter: blur(10px);
     border: 1px solid rgba(228, 225, 218, 0.6);
     border-radius: var(--radius-lg);
-    padding: 3rem;
+    padding: 2rem;
     width: 100%;
-    max-width: 450px;
+    max-width: 440px;
     box-shadow: 0 40px 100px rgba(0,0,0,0.1);
     transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
     transition: transform 0.5s ease;
@@ -227,8 +227,8 @@ a { color: inherit; text-decoration: none; }
 
 /* Mock card summary section */
 .mock-summary-item {
-    margin-bottom: 2rem;
-    padding-bottom: 2rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
     border-bottom: 1px solid var(--border-soft);
 }
 
@@ -242,14 +242,14 @@ a { color: inherit; text-decoration: none; }
 
 .mock-total {
     font-family: var(--font-display);
-    font-size: 2.25rem;
+    font-size: 2rem;
     color: var(--ink);
     display: block;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
 }
 
 .mock-trend {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 500;
     margin-left: 0.5rem;
 }
@@ -260,15 +260,15 @@ a { color: inherit; text-decoration: none; }
 
 .mock-summary-row {
     display: flex;
-    gap: 2rem;
-    margin-bottom: 2rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .mock-stat-box {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
 }
 
 .mock-stat-label {
@@ -281,7 +281,7 @@ a { color: inherit; text-decoration: none; }
 
 .mock-stat-val {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 600;
     color: var(--ink);
 }
@@ -294,14 +294,14 @@ a { color: inherit; text-decoration: none; }
 .mock-bars {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .mock-bar-row {
     display: grid;
-    grid-template-columns: 110px 1fr 80px;
+    grid-template-columns: 80px 1fr 70px;
     align-items: center;
-    gap: 1.25rem;
+    gap: 1rem;
 }
 
 .mock-cat {
@@ -635,6 +635,114 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ------------------------------------------------------------------ */
+/* Video Modal                                                         */
+/* ------------------------------------------------------------------ */
+
+.video-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.video-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.video-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+}
+
+.video-modal-container {
+    position: relative;
+    z-index: 10000;
+    width: 90%;
+    max-width: 1100px;
+    padding: 1.5rem;
+    animation: modalSlideUp 0.3s ease;
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.video-modal-content {
+    position: relative;
+    background: var(--paper-card);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.video-modal-close {
+    position: absolute;
+    top: -3rem;
+    right: 0;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--ink);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10001;
+}
+
+.video-modal-close:hover {
+    background: var(--paper-card);
+    transform: scale(1.1);
+}
+
+.video-modal-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+.video-modal-iframe-wrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    background: var(--ink);
+}
+
+.video-modal-iframe-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -642,6 +750,8 @@ a { color: inherit; text-decoration: none; }
     .hero {
         grid-template-columns: 1fr;
         text-align: center;
+        padding: 3.5rem 1.5rem 3.5rem;
+        gap: 3rem;
     }
 
     .hero-subtitle { max-width: 100%; }
@@ -653,5 +763,5 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 600px) {
     .nav-links a:not(.nav-cta) { display: none; }
-    .hero { padding: 3rem 1rem 2rem; }
+    .hero { padding: 2.5rem 1rem 2rem; }
 }

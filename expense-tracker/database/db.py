@@ -113,6 +113,41 @@ def seed_db():
         conn.close()
 
 
+def get_user_by_email(email):
+    """
+    Retrieves a user record by email address.
+    Returns sqlite3.Row or None.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        return cursor.fetchone()
+    finally:
+        conn.close()
+
+
+def create_user(name, email, password_hash):
+    """
+    Inserts a new user record with parameterized query.
+    Returns the new user's ID on success, or None on error.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO users (name, email, password_hash)
+            VALUES (?, ?, ?)
+        """, (name, email, password_hash))
+        conn.commit()
+        return cursor.lastrowid
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        return None
+    finally:
+        conn.close()
+
+
 if __name__ == '__main__':
     init_db()
     seed_db()

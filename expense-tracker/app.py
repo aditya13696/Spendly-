@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from database.db import init_db, seed_db
 
 app = Flask(__name__)
@@ -13,8 +13,12 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
+    if request.method == "POST":
+        # Handle registration logic
+        # For now, just return a placeholder response
+        return "Registration processing — will implement full registration in Step 2"
     return render_template("register.html")
 
 

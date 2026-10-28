@@ -63,13 +63,14 @@ def test_login_success(client):
 
     assert session is not None
 
-def test_login_duplicate_redirect(client):
-    # Try logging in when already logged in via session
+def test_login_redirect_when_logged_in(client):
+    # When already logged in, GET /login should redirect to landing
     with client.session_transaction() as sess:
         sess["user_id"] = 999
 
     response = client.get("/login", follow_redirects=False)
-    assert response.status_code == 200
+    assert response.status_code == 302
+    assert "/" in response.headers["Location"]
 
 def test_logout(client):
     # First login as demo user
@@ -83,3 +84,12 @@ def test_logout(client):
 
     assert response.status_code == 302
     assert "/login" in response.headers["Location"]
+
+def test_register_redirect_when_logged_in(client):
+    # When already logged in, GET /register should redirect to landing
+    with client.session_transaction() as sess:
+        sess["user_id"] = 999
+
+    response = client.get("/register", follow_redirects=False)
+    assert response.status_code == 302
+    assert "/" in response.headers["Location"]

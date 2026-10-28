@@ -1,7 +1,10 @@
-from flask import Flask, render_template
-from database.db import init_db, seed_db
+import os
+from flask import Flask, render_template, request, redirect, url_for, flash
+from werkzeug.security import generate_password_hash
+from database.db import init_db, seed_db, get_user_by_email, create_user
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-spendly")
 
 
 # ------------------------------------------------------------------ #
@@ -13,8 +16,64 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        # 1. Required fields check
+        if not name or not email or not password:
+            return render_template(
+                "register.html",
+                error="All fields are required.",
+                name=name,
+                email=email,
+            )
+
+        # 2. Email format check
+        if "@" not in email or "." not in email.split("@")[-1] or len(email.split("@")[0]) == 0:
+            return render_template(
+                "register.html",
+                error="Please enter a valid email address.",
+                name=name,
+                email=email,
+            )
+
+        # 3. Password length check
+        if len(password) < 8:
+            return render_template(
+                "register.html",
+                error="Password must be at least 8 characters long.",
+                name=name,
+                email=email,
+            )
+
+        # 4. Check if user already exists
+        if get_user_by_email(email):
+            return render_template(
+                "register.html",
+                error="An account with this email already exists.",
+                name=name,
+                email=email,
+            )
+
+        # 5. Hash password and insert user
+        password_hash = generate_password_hash(password)
+        user_id = create_user(name, email, password_hash)
+
+        if user_id:
+            flash("Account created successfully! Please sign in.", "success")
+            return redirect(url_for("login"))
+        else:
+            return render_template(
+                "register.html",
+                error="Registration failed. Please try again.",
+                name=name,
+                email=email,
+            )
+
     return render_template("register.html")
 
 

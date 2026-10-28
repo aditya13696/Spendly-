@@ -1,6 +1,6 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
-from werkzeug.security import generate_password_hash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import init_db, seed_db, get_user_by_email, create_user
 
 app = Flask(__name__)
@@ -77,8 +77,42 @@ def register():
     return render_template("register.html")
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        # 1. Required fields check
+        if not email or not password:
+            return render_template(
+                "login.html",
+                error="Both email and password are required."
+            )
+
+        # 2. Look up user by email
+        user = get_user_by_email(email)
+        if not user:
+            return render_template(
+                "login.html",
+                error="Invalid email or password.",
+                email=email
+            )
+
+        # 3. Verify password
+        if not check_password_hash(user["password_hash"], password):
+            return render_template(
+                "login.html",
+                error="Invalid email or password.",
+                email=email
+            )
+
+        # 4. Set session and redirect
+        session["user_id"] = user["id"]
+        session["user_name"] = user["name"]
+        flash("Signed in successfully!", "success")
+        return redirect(url_for("landing"))
+
     return render_template("login.html")
 
 
@@ -98,7 +132,9 @@ def privacy():
 
 @app.route("/logout")
 def logout():
-    return "Logout — coming in Step 3"
+    session.clear()
+    flash("Logged out successfully.", "success")
+    return redirect(url_for("login"))
 
 
 @app.route("/profile")

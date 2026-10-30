@@ -106,11 +106,13 @@ def test_profile_uses_badge_classes(client):
 
 def test_profile_empty_state_user(client):
     """Profile page should render cleanly for a user with no expenses."""
+    import time
     from database.db import create_user
     from werkzeug.security import generate_password_hash
 
-    # Create a new user with 0 expenses
-    new_user_id = create_user("Empty User", "empty@example.com", generate_password_hash("password123"))
+    # Create a unique new user with 0 expenses
+    unique_email = f"empty_{int(time.time() * 1000)}@example.com"
+    new_user_id = create_user("Empty User", unique_email, generate_password_hash("password123"))
 
     with client.session_transaction() as sess:
         sess["user_id"] = new_user_id
@@ -120,7 +122,7 @@ def test_profile_empty_state_user(client):
     assert response.status_code == 200
     html = response.data.decode("utf-8")
     assert "Empty User" in html
-    assert "empty@example.com" in html
+    assert unique_email in html
     assert "₹0.00" in html
     assert "N/A" in html
 

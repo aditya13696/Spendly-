@@ -148,6 +148,119 @@ def create_user(name, email, password_hash):
         conn.close()
 
 
+def get_user_by_id(user_id):
+    """
+    Retrieves a user record by ID.
+    Returns sqlite3.Row or None.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        return cursor.fetchone()
+    finally:
+        conn.close()
+
+
+def get_expenses_by_user(user_id, limit=None):
+    """
+    Retrieves all expenses for a user, ordered by date descending.
+    Returns list of sqlite3.Row objects.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        if limit:
+            cursor.execute(
+                "SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC LIMIT ?",
+                (user_id, limit)
+            )
+        else:
+            cursor.execute(
+                "SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC",
+                (user_id,)
+            )
+        return cursor.fetchall()
+    finally:
+        conn.close()
+
+
+def get_user_stats(user_id):
+    """
+    Calculates user statistics: total spent, transaction count, top category.
+    Returns dict with keys: total_spent, transaction_count, top_category.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        # Total spent
+        cursor.execute("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE user_id = ?", (user_id,))
+        total_spent = cursor.fetchone()[0]
+
+        # Transaction count
+        cursor.execute("SELECT COUNT(*) FROM expenses WHERE user_id = ?", (user_id,))
+        transaction_count = cursor.fetchone()[0]
+
+        # Top category (category with highest total spending)
+        cursor.execute("""
+            SELECT category, SUM(amount) as total
+            FROM expenses
+            WHERE user_id = ?
+            GROUP BY category
+            ORDER BY total DESC
+            LIMIT 1
+        """, (user_id,))
+        top_category_row = cursor.fetchone()
+        top_category = top_category_row['category'] if top_category_row else None
+
+        return {
+            'total_spent': total_spent,
+            'transaction_count': transaction_count,
+            'top_category': top_category
+        }
+    finally:
+        conn.close()
+
+
+def get_category_breakdown(user_id):
+    """
+    Aggregates expenses by category with totals and percentages.
+    Returns list of dicts with keys: category, amount, percentage.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        # Get total spent for percentage calculation
+        cursor.execute("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE user_id = ?", (user_id,))
+        total_spent = cursor.fetchone()[0]
+
+        if total_spent == 0:
+            return []
+
+        # Get breakdown by category
+        cursor.execute("""
+            SELECT category, SUM(amount) as total
+            FROM expenses
+            WHERE user_id = ?
+            GROUP BY category
+            ORDER BY total DESC
+        """, (user_id,))
+
+        rows = cursor.fetchall()
+        breakdown = []
+        for row in rows:
+            percentage = round((row['total'] / total_spent) * 100)
+            breakdown.append({
+                'category': row['category'],
+                'amount': row['total'],
+                'percentage': percentage
+            })
+
+        return breakdown
+    finally:
+        conn.close()
+
+
 if __name__ == '__main__':
     init_db()
     seed_db()

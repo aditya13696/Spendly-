@@ -162,54 +162,74 @@ def get_user_by_id(user_id):
         conn.close()
 
 
-def get_expenses_by_user(user_id, limit=None):
+def get_expenses_by_user(user_id, limit=None, start_date=None, end_date=None):
     """
     Retrieves all expenses for a user, ordered by date descending.
+    Optionally filters by date range (start_date, end_date in 'YYYY-MM-DD' format).
     Returns list of sqlite3.Row objects.
     """
     conn = get_db()
     cursor = conn.cursor()
     try:
+        query = "SELECT * FROM expenses WHERE user_id = ?"
+        params = [user_id]
+
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+
+        query += " ORDER BY date DESC"
+
         if limit:
-            cursor.execute(
-                "SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC LIMIT ?",
-                (user_id, limit)
-            )
-        else:
-            cursor.execute(
-                "SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC",
-                (user_id,)
-            )
+            query += " LIMIT ?"
+            params.append(limit)
+
+        cursor.execute(query, params)
         return cursor.fetchall()
     finally:
         conn.close()
 
 
-def get_user_stats(user_id):
+def get_user_stats(user_id, start_date=None, end_date=None):
     """
     Calculates user statistics: total spent, transaction count, top category.
+    Optionally filters by date range (start_date, end_date in 'YYYY-MM-DD' format).
     Returns dict with keys: total_spent, transaction_count, top_category.
     """
     conn = get_db()
     cursor = conn.cursor()
     try:
+        # Build WHERE clause for date filtering
+        where_clause = "WHERE user_id = ?"
+        params = [user_id]
+
+        if start_date:
+            where_clause += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            where_clause += " AND date <= ?"
+            params.append(end_date)
+
         # Total spent
-        cursor.execute("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE user_id = ?", (user_id,))
+        cursor.execute(f"SELECT COALESCE(SUM(amount), 0) FROM expenses {where_clause}", params)
         total_spent = cursor.fetchone()[0]
 
         # Transaction count
-        cursor.execute("SELECT COUNT(*) FROM expenses WHERE user_id = ?", (user_id,))
+        cursor.execute(f"SELECT COUNT(*) FROM expenses {where_clause}", params)
         transaction_count = cursor.fetchone()[0]
 
         # Top category (category with highest total spending)
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT category, SUM(amount) as total
             FROM expenses
-            WHERE user_id = ?
+            {where_clause}
             GROUP BY category
             ORDER BY total DESC
             LIMIT 1
-        """, (user_id,))
+        """, params)
         top_category_row = cursor.fetchone()
         top_category = top_category_row['category'] if top_category_row else None
 
@@ -222,29 +242,41 @@ def get_user_stats(user_id):
         conn.close()
 
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, start_date=None, end_date=None):
     """
     Aggregates expenses by category with totals and percentages.
+    Optionally filters by date range (start_date, end_date in 'YYYY-MM-DD' format).
     Returns list of dicts with keys: category, amount, percentage.
     """
     conn = get_db()
     cursor = conn.cursor()
     try:
+        # Build WHERE clause for date filtering
+        where_clause = "WHERE user_id = ?"
+        params = [user_id]
+
+        if start_date:
+            where_clause += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            where_clause += " AND date <= ?"
+            params.append(end_date)
+
         # Get total spent for percentage calculation
-        cursor.execute("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE user_id = ?", (user_id,))
+        cursor.execute(f"SELECT COALESCE(SUM(amount), 0) FROM expenses {where_clause}", params)
         total_spent = cursor.fetchone()[0]
 
         if total_spent == 0:
             return []
 
         # Get breakdown by category
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT category, SUM(amount) as total
             FROM expenses
-            WHERE user_id = ?
+            {where_clause}
             GROUP BY category
             ORDER BY total DESC
-        """, (user_id,))
+        """, params)
 
         rows = cursor.fetchall()
         breakdown = []

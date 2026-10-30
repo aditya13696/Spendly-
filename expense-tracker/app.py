@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import init_db, seed_db, get_user_by_email, create_user, get_user_by_id, get_expenses_by_user, get_user_stats, get_category_breakdown
@@ -169,16 +170,78 @@ def profile():
         "member_since": user["created_at"][:10] if user["created_at"] else "Unknown",
     }
 
-    # Fetch summary stats from database
-    stats_raw = get_user_stats(user_id)
+    # Date filtering logic
+    preset = request.args.get('preset', 'all')
+    custom_start = request.args.get('start_date', '').strip()
+    custom_end = request.args.get('end_date', '').strip()
+
+    start_date = None
+    end_date = None
+    period_label = "All time"
+
+    try:
+        today = datetime.now().date()
+
+        if preset == 'this_month':
+            start_date = today.replace(day=1).strftime('%Y-%m-%d')
+            end_date = today.strftime('%Y-%m-%d')
+            period_label = "This month"
+
+        elif preset == 'last_month':
+            first_day_this_month = today.replace(day=1)
+            last_day_last_month = first_day_this_month - timedelta(days=1)
+            first_day_last_month = last_day_last_month.replace(day=1)
+            start_date = first_day_last_month.strftime('%Y-%m-%d')
+            end_date = last_day_last_month.strftime('%Y-%m-%d')
+            period_label = "Last month"
+
+        elif preset == 'last_30_days':
+            start_date = (today - timedelta(days=29)).strftime('%Y-%m-%d')
+            end_date = today.strftime('%Y-%m-%d')
+            period_label = "Last 30 days"
+
+        elif preset == 'this_year':
+            start_date = today.replace(month=1, day=1).strftime('%Y-%m-%d')
+            end_date = today.replace(month=12, day=31).strftime('%Y-%m-%d')
+            period_label = "This year"
+
+        elif preset == 'custom' and custom_start and custom_end:
+            # Validate custom dates
+            start_dt = datetime.strptime(custom_start, '%Y-%m-%d').date()
+            end_dt = datetime.strptime(custom_end, '%Y-%m-%d').date()
+
+            # Swap if start > end
+            if start_dt > end_dt:
+                start_dt, end_dt = end_dt, start_dt
+
+            start_date = start_dt.strftime('%Y-%m-%d')
+            end_date = end_dt.strftime('%Y-%m-%d')
+            period_label = f"{start_dt.strftime('%b %d, %Y')} – {end_dt.strftime('%b %d, %Y')}"
+
+        elif preset != 'all':
+            # Invalid preset, fallback to all
+            preset = 'all'
+
+    except (ValueError, AttributeError):
+        # Date parsing failed, fallback to all
+        preset = 'all'
+        start_date = None
+        end_date = None
+        period_label = "All time"
+
+    # Fetch summary stats from database with date filter
+    stats_raw = get_user_stats(user_id, start_date, end_date)
     stats = {
         "total_spent": f"₹{stats_raw['total_spent']:,.2f}",
         "transaction_count": stats_raw['transaction_count'],
         "top_category": stats_raw['top_category'] or "N/A",
+        "period_label": period_label,
     }
 
-    # Fetch recent expenses from database
-    expenses_raw = get_expenses_by_user(user_id, limit=5)
+    # Fetch expenses from database with date filter
+    # When filtering by date, show all matching expenses (no limit)
+    limit = None if (start_date or end_date) else 5
+    expenses_raw = get_expenses_by_user(user_id, limit=limit, start_date=start_date, end_date=end_date)
     recent_expenses = []
     for exp in expenses_raw:
         recent_expenses.append({
@@ -188,8 +251,8 @@ def profile():
             "amount": f"₹{exp['amount']:,.2f}",
         })
 
-    # Fetch category breakdown from database
-    categories_raw = get_category_breakdown(user_id)
+    # Fetch category breakdown from database with date filter
+    categories_raw = get_category_breakdown(user_id, start_date, end_date)
     category_breakdown = []
     for cat in categories_raw:
         category_breakdown.append({
@@ -198,12 +261,21 @@ def profile():
             "percentage": cat["percentage"],
         })
 
+    # Pass filter info to template
+    filter_info = {
+        "preset": preset,
+        "start_date": custom_start if preset == 'custom' else '',
+        "end_date": custom_end if preset == 'custom' else '',
+        "label": period_label,
+    }
+
     return render_template(
         "profile.html",
         user=user_data,
         stats=stats,
         expenses=recent_expenses,
-        categories=category_breakdown
+        categories=category_breakdown,
+        filter_info=filter_info
     )
 
 

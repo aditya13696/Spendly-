@@ -15,17 +15,41 @@
         </div>
     </div>
 
+    <!-- Date Filter Bar -->
+    <div class="profile-filter-container">
+        <div class="filter-presets">
+            <a href="{{ url_for('profile', preset='all') }}" class="filter-preset-btn {% if filter_info.preset == 'all' %}filter-preset-active{% endif %}">All Time</a>
+            <a href="{{ url_for('profile', preset='this_month') }}" class="filter-preset-btn {% if filter_info.preset == 'this_month' %}filter-preset-active{% endif %}">This Month</a>
+            <a href="{{ url_for('profile', preset='last_month') }}" class="filter-preset-btn {% if filter_info.preset == 'last_month' %}filter-preset-active{% endif %}">Last Month</a>
+            <a href="{{ url_for('profile', preset='last_30_days') }}" class="filter-preset-btn {% if filter_info.preset == 'last_30_days' %}filter-preset-active{% endif %}">Last 30 Days</a>
+            <a href="{{ url_for('profile', preset='this_year') }}" class="filter-preset-btn {% if filter_info.preset == 'this_year' %}filter-preset-active{% endif %}">This Year</a>
+        </div>
+        <form method="GET" action="{{ url_for('profile') }}" class="filter-custom-form">
+            <input type="hidden" name="preset" value="custom">
+            <div class="filter-date-group">
+                <label for="start_date" class="filter-date-label">From</label>
+                <input type="date" id="start_date" name="start_date" value="{{ filter_info.start_date }}" class="filter-date-input">
+            </div>
+            <div class="filter-date-group">
+                <label for="end_date" class="filter-date-label">To</label>
+                <input type="date" id="end_date" name="end_date" value="{{ filter_info.end_date }}" class="filter-date-input">
+            </div>
+            <button type="submit" class="btn-filter-apply">Apply</button>
+            <a href="{{ url_for('profile') }}" class="btn-filter-reset">Reset</a>
+        </form>
+    </div>
+
     <!-- Summary Stats Row -->
     <div class="profile-stats-grid">
         <div class="profile-stat-card">
             <span class="stat-label">Total Spent</span>
             <span class="stat-value">{{ stats.total_spent }}</span>
-            <span class="stat-subtitle">This month</span>
+            <span class="stat-subtitle">{{ stats.period_label }}</span>
         </div>
         <div class="profile-stat-card">
             <span class="stat-label">Transactions</span>
             <span class="stat-value">{{ stats.transaction_count }}</span>
-            <span class="stat-subtitle">Total recorded</span>
+            <span class="stat-subtitle">{{ stats.period_label }}</span>
         </div>
         <div class="profile-stat-card">
             <span class="stat-label">Top Category</span>
@@ -50,16 +74,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for expense in expenses %}
-                        <tr>
-                            <td>{{ expense.date }}</td>
-                            <td>{{ expense.description }}</td>
-                            <td>
-                                <span class="badge-cat badge-cat-{{ expense.category|lower }}">{{ expense.category }}</span>
-                            </td>
-                            <td class="amount-cell">{{ expense.amount }}</td>
-                        </tr>
-                        {% endfor %}
+                        {% if expenses %}
+                            {% for expense in expenses %}
+                            <tr>
+                                <td>{{ expense.date }}</td>
+                                <td>{{ expense.description }}</td>
+                                <td>
+                                    <span class="badge-cat badge-cat-{{ expense.category|lower }}">{{ expense.category }}</span>
+                                </td>
+                                <td class="amount-cell">{{ expense.amount }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="empty-state-cell">No transactions found for the selected period.</td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -69,18 +99,22 @@
         <div class="profile-breakdown-card">
             <h2 class="section-title">Category Breakdown</h2>
             <div class="breakdown-list">
-                {% for cat in categories %}
-                <div class="breakdown-row">
-                    <div class="breakdown-header">
-                        <span class="breakdown-category">{{ cat.category }}</span>
-                        <span class="breakdown-amount">{{ cat.amount }}</span>
+                {% if categories %}
+                    {% for cat in categories %}
+                    <div class="breakdown-row">
+                        <div class="breakdown-header">
+                            <span class="breakdown-category">{{ cat.category }}</span>
+                            <span class="breakdown-amount">{{ cat.amount }}</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill progress-fill-{{ cat.category|lower }}" style="--p: {{ cat.percentage }}%"></div>
+                        </div>
+                        <span class="breakdown-percentage">{{ cat.percentage }}%</span>
                     </div>
-                    <div class="progress-track">
-                        <div class="progress-fill progress-fill-{{ cat.category|lower }}" style="--p: {{ cat.percentage }}%"></div>
-                    </div>
-                    <span class="breakdown-percentage">{{ cat.percentage }}%</span>
-                </div>
-                {% endfor %}
+                    {% endfor %}
+                {% else %}
+                    <p class="empty-state-text">No spending recorded for this period.</p>
+                {% endif %}
             </div>
         </div>
     </div>

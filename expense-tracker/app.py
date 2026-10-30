@@ -13,6 +13,9 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-spendly")
 
 @app.route("/")
 def landing():
+    # Redirect logged in users to profile page
+    if session.get("user_id"):
+        return redirect(url_for("profile"))
     return render_template("landing.html")
 
 
@@ -119,7 +122,7 @@ def login():
         session["user_id"] = user["id"]
         session["user_name"] = user["name"]
         flash("Signed in successfully!", "success")
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     return render_template("login.html")
 
@@ -147,7 +150,50 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    # Authentication guard: redirect to login if not authenticated
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    # Hardcoded user data (Step 4: UI only, no DB queries)
+    user_data = {
+        "name": "Alex Morgan",
+        "email": "alex.morgan@example.com",
+        "initials": "AM",
+        "member_since": "October 2026",
+    }
+
+    # Hardcoded summary stats
+    stats = {
+        "total_spent": "₹24,850",
+        "transaction_count": 42,
+        "top_category": "Food",
+    }
+
+    # Hardcoded recent transactions (5 rows, 3+ categories)
+    recent_expenses = [
+        {"date": "28 Oct 2026", "description": "Grocery store run", "category": "Food", "amount": "₹3,450"},
+        {"date": "26 Oct 2026", "description": "Metro card recharge", "category": "Transport", "amount": "₹1,000"},
+        {"date": "24 Oct 2026", "description": "Electricity bill", "category": "Bills", "amount": "₹2,800"},
+        {"date": "22 Oct 2026", "description": "Cinema tickets & snacks", "category": "Entertainment", "amount": "₹1,250"},
+        {"date": "20 Oct 2026", "description": "Doctor consultation", "category": "Health", "amount": "₹1,600"},
+    ]
+
+    # Hardcoded category breakdown (3+ categories with amounts and percentages)
+    category_breakdown = [
+        {"category": "Food", "amount": "₹9,850", "percentage": 40},
+        {"category": "Bills", "amount": "₹6,200", "percentage": 25},
+        {"category": "Transport", "amount": "₹3,700", "percentage": 15},
+        {"category": "Entertainment", "amount": "₹2,600", "percentage": 10},
+        {"category": "Health", "amount": "₹2,500", "percentage": 10},
+    ]
+
+    return render_template(
+        "profile.html",
+        user=user_data,
+        stats=stats,
+        expenses=recent_expenses,
+        categories=category_breakdown
+    )
 
 
 @app.route("/expenses/add")

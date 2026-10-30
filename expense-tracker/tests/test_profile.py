@@ -43,9 +43,9 @@ def test_profile_contains_user_card(client):
 
     response = client.get("/profile")
     html = response.data.decode("utf-8")
-    assert "Alex Morgan" in html
-    assert "alex.morgan@example.com" in html
-    assert "Member since October 2026" in html
+    assert "Demo User" in html
+    assert "demo@spendly.com" in html
+    assert "Member since" in html
 
 
 def test_profile_contains_summary_stats(client):
@@ -59,8 +59,8 @@ def test_profile_contains_summary_stats(client):
     assert "Total Spent" in html
     assert "Transactions" in html
     assert "Top Category" in html
-    assert "42" in html
-    assert "Food" in html
+    assert "8" in html
+    assert "Bills" in html
 
 
 def test_profile_contains_transaction_table(client):
@@ -72,9 +72,9 @@ def test_profile_contains_transaction_table(client):
     response = client.get("/profile")
     html = response.data.decode("utf-8")
     assert "Recent Transactions" in html
-    assert "Grocery store run" in html
-    assert "Metro card recharge" in html
-    assert "Electricity bill" in html
+    assert "Groceries" in html
+    assert "Miscellaneous" in html
+    assert "New shoes" in html
 
 
 def test_profile_contains_category_breakdown(client):
@@ -100,8 +100,29 @@ def test_profile_uses_badge_classes(client):
     response = client.get("/profile")
     html = response.data.decode("utf-8")
     assert "badge-cat badge-cat-food" in html
-    assert "badge-cat badge-cat-bills" in html
-    assert "badge-cat badge-cat-transport" in html
+    assert "badge-cat badge-cat-other" in html
+    assert "badge-cat badge-cat-shopping" in html
+
+
+def test_profile_empty_state_user(client):
+    """Profile page should render cleanly for a user with no expenses."""
+    from database.db import create_user
+    from werkzeug.security import generate_password_hash
+
+    # Create a new user with 0 expenses
+    new_user_id = create_user("Empty User", "empty@example.com", generate_password_hash("password123"))
+
+    with client.session_transaction() as sess:
+        sess["user_id"] = new_user_id
+        sess["user_name"] = "Empty User"
+
+    response = client.get("/profile")
+    assert response.status_code == 200
+    html = response.data.decode("utf-8")
+    assert "Empty User" in html
+    assert "empty@example.com" in html
+    assert "₹0.00" in html
+    assert "N/A" in html
 
 
 def test_profile_no_inline_hex_colors(client):

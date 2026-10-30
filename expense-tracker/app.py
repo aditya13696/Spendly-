@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from database.db import init_db, seed_db, get_user_by_email, create_user
+from database.db import init_db, seed_db, get_user_by_email, create_user, get_user_by_id, get_expenses_by_user, get_user_stats, get_category_breakdown
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-spendly")
@@ -154,38 +154,49 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
-    # Hardcoded user data (Step 4: UI only, no DB queries)
+    user_id = session["user_id"]
+
+    # Fetch user data from database
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        return redirect(url_for("login"))
+
     user_data = {
-        "name": "Alex Morgan",
-        "email": "alex.morgan@example.com",
-        "initials": "AM",
-        "member_since": "October 2026",
+        "name": user["name"],
+        "email": user["email"],
+        "initials": "".join([n[0].upper() for n in user["name"].split()[:2]]),
+        "member_since": user["created_at"][:10] if user["created_at"] else "Unknown",
     }
 
-    # Hardcoded summary stats
+    # Fetch summary stats from database
+    stats_raw = get_user_stats(user_id)
     stats = {
-        "total_spent": "₹24,850",
-        "transaction_count": 42,
-        "top_category": "Food",
+        "total_spent": f"₹{stats_raw['total_spent']:,.2f}",
+        "transaction_count": stats_raw['transaction_count'],
+        "top_category": stats_raw['top_category'] or "N/A",
     }
 
-    # Hardcoded recent transactions (5 rows, 3+ categories)
-    recent_expenses = [
-        {"date": "28 Oct 2026", "description": "Grocery store run", "category": "Food", "amount": "₹3,450"},
-        {"date": "26 Oct 2026", "description": "Metro card recharge", "category": "Transport", "amount": "₹1,000"},
-        {"date": "24 Oct 2026", "description": "Electricity bill", "category": "Bills", "amount": "₹2,800"},
-        {"date": "22 Oct 2026", "description": "Cinema tickets & snacks", "category": "Entertainment", "amount": "₹1,250"},
-        {"date": "20 Oct 2026", "description": "Doctor consultation", "category": "Health", "amount": "₹1,600"},
-    ]
+    # Fetch recent expenses from database
+    expenses_raw = get_expenses_by_user(user_id, limit=5)
+    recent_expenses = []
+    for exp in expenses_raw:
+        recent_expenses.append({
+            "date": exp["date"],
+            "description": exp["description"],
+            "category": exp["category"],
+            "amount": f"₹{exp['amount']:,.2f}",
+        })
 
-    # Hardcoded category breakdown (3+ categories with amounts and percentages)
-    category_breakdown = [
-        {"category": "Food", "amount": "₹9,850", "percentage": 40},
-        {"category": "Bills", "amount": "₹6,200", "percentage": 25},
-        {"category": "Transport", "amount": "₹3,700", "percentage": 15},
-        {"category": "Entertainment", "amount": "₹2,600", "percentage": 10},
-        {"category": "Health", "amount": "₹2,500", "percentage": 10},
-    ]
+    # Fetch category breakdown from database
+    categories_raw = get_category_breakdown(user_id)
+    category_breakdown = []
+    for cat in categories_raw:
+        category_breakdown.append({
+            "category": cat["category"],
+            "amount": f"₹{cat['amount']:,.2f}",
+            "percentage": cat["percentage"],
+        })
 
     return render_template(
         "profile.html",

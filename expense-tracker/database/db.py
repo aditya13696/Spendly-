@@ -148,6 +148,27 @@ def create_user(name, email, password_hash):
         conn.close()
 
 
+def create_expense(user_id, amount, category, date, description):
+    """
+    Inserts a new expense record with parameterized query.
+    Returns the new expense ID on success, or None on error.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO expenses (user_id, amount, category, date, description)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, amount, category, date, description))
+        conn.commit()
+        return cursor.lastrowid
+    except Exception as e:
+        conn.rollback()
+        return None
+    finally:
+        conn.close()
+
+
 def get_user_by_id(user_id):
     """
     Retrieves a user record by ID.

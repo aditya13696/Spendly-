@@ -1060,6 +1060,17 @@ a { color: inherit; text-decoration: none; }
     border-radius: 999px;
 }
 
+.profile-actions {
+    display: flex;
+    align-items: center;
+}
+
+.btn-add-expense {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
 /* Summary Stats Grid */
 .profile-stats-grid {
     display: grid;
@@ -1421,6 +1432,17 @@ a { color: inherit; text-decoration: none; }
 
     .profile-user-card {
         flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-actions {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .btn-add-expense {
+        display: block;
+        width: 100%;
         text-align: center;
     }
 

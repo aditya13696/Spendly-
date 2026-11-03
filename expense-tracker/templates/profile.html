@@ -5,6 +5,15 @@
 {% block content %}
 
 <section class="profile-page">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="auth-{{ category }}" style="margin-bottom: 1.5rem;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <!-- User Info Card -->
     <div class="profile-user-card">
         <div class="profile-avatar">{{ user.initials }}</div>
@@ -12,6 +21,9 @@
             <h1 class="profile-user-name">{{ user.name }}</h1>
             <p class="profile-user-email">{{ user.email }}</p>
             <span class="profile-member-badge">Member since {{ user.member_since }}</span>
+        </div>
+        <div class="profile-actions">
+            <a href="{{ url_for('add_expense') }}" class="btn-primary btn-add-expense">+ Add Expense</a>
         </div>
     </div>
 
